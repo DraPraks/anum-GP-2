@@ -5,10 +5,9 @@ fit by least squares. The unknown vector is
 
 `x = [alpha_1, phi_1_1, phi_1_2, alpha_2, phi_2_1, phi_2_2]`.
 
-Normal equations with dense LU and partial pivoting are written in-repo.
-Thin QR by Givens rotations is still a stub in `src/givens.py`.
-Library factorizations and solvers (`numpy.linalg.solve`, `qr`, `lstsq`,
-and SciPy equivalents) are not used.
+Two solvers are written in-repo: normal equations with dense LU and partial
+pivoting, and thin QR by Givens rotations. Library factorizations and solvers
+(`numpy.linalg.solve`, `qr`, `lstsq`, and SciPy equivalents) are not used.
 
 ## Layout
 
@@ -22,7 +21,7 @@ and SciPy equivalents) are not used.
 | `src/validation.py` | Shape and sparsity checks |
 | `src/lu.py` | Dense LU with partial pivoting |
 | `src/normal_equations.py` | `AᵀA x = Aᵀb` |
-| `src/givens.py` | Givens QR stub (not implemented) |
+| `src/givens.py` | Givens QR and the first-column rotation check |
 | `src/metrics.py` | Residual norm, condition numbers, RMSE |
 | `src/outliers.py` | Largest absolute train residuals |
 | `src/plots.py` | Return overlays |

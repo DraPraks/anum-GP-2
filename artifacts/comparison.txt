@@ -1,7 +1,14 @@
 method                      flops       memory     Q memory     kappa(A)   kappa(ATA)      ||r||_2   RMSE train    RMSE test      seconds
-normal equations            16389         1248          n/a      192.605      37096.8     0.152977   0.00883213    0.0120616    0.0014143
+normal equations            16389         1248          n/a      192.605      37096.8     0.152977   0.00883213    0.0120616    0.0004082
+givens qr                   48174        31152        14400      192.605          n/a     0.152977   0.00883213    0.0120616    0.0149955
 
 Largest |train residual|, normal equations
+  row   24  date 2024-01-29  residual -0.0468072
+  row  206  date 2024-07-29  residual -0.0412093
+  row  261  date 2024-09-22  residual -0.0396523
+  row  126  date 2024-05-10  residual 0.0244765
+  row   69  date 2024-03-14  residual 0.0244074
+Largest |train residual|, Givens QR
   row   24  date 2024-01-29  residual -0.0468072
   row  206  date 2024-07-29  residual -0.0412093
   row  261  date 2024-09-22  residual -0.0396523

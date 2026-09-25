@@ -1,4 +1,4 @@
-"""SETAR least squares. Normal equations are implemented; Givens QR is a stub."""
+"""SETAR least squares (even group: normal equations and Givens QR)."""
 
 from src.design import DesignSystem, build_design_system
 from src.givens import GivensQrResult, givens_least_squares, verify_first_column_rotations

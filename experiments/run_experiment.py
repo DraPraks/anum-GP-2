@@ -5,8 +5,7 @@ Pipeline:
 1. Load Close from data/stock_train.csv and data/stock_test.csv.
 2. Build A, b for train and for test with the same design builder.
 3. Check the official six-price fixture against the printed A and b.
-4. Solve the training system with normal equations (dense LU).
-   TODO: solve the same system with Givens QR.
+4. Solve the training system with normal equations (dense LU) and with Givens QR.
 5. Freeze each x from train. Score RMSE on train and on test. Do not refit on test.
 6. Rank the worst training residuals.
 7. Print the comparison table.
@@ -19,7 +18,8 @@ import numpy as np
 
 from data.fixture import A_PRINTED, B_PRINTED, CLOSE
 from src.design import build_design_system
-from src.metrics import ComparisonRow, fitted_returns, rmse
+from src.givens import givens_least_squares, verify_first_column_rotations
+from src.metrics import ComparisonRow, condition_number_2, fitted_returns, rmse
 from src.normal_equations import solve_normal_equations
 from src.outliers import ResidualOutlier, rank_residual_outliers
 from src.plots import plot_returns_overlay
@@ -96,10 +96,15 @@ def main() -> None:
     assert_design_system(test)
 
     normal = solve_normal_equations(train.A, train.b)
-    # TODO: verify_first_column_rotations(train.A) and givens_least_squares(train.A, train.b).
+    sweep = verify_first_column_rotations(train.A)
+    if not np.allclose(sweep.after_sweep[1:, 0], 0.0, atol=1e-10):
+        raise AssertionError("first-column Givens sweep did not clear column 0")
+    qr = givens_least_squares(train.A, train.b)
 
     normal_train = fitted_returns(train, normal.x)
     normal_test = fitted_returns(test, normal.x)
+    qr_train = fitted_returns(train, qr.x)
+    qr_test = fitted_returns(test, qr.x)
 
     rows = [
         ComparisonRow(
@@ -114,13 +119,27 @@ def main() -> None:
             rmse_test=rmse(test.b, normal_test),
             runtime_seconds=normal.runtime_seconds,
         ),
+        ComparisonRow(
+            method="givens qr",
+            flops=qr.flops,
+            memory_bytes=qr.memory_bytes,
+            memory_q_explicit_bytes=qr.memory_q_explicit_bytes,
+            kappa_A=condition_number_2(train.A),
+            kappa_ata=None,
+            residual_norm_train=qr.residual_norm,
+            rmse_train=rmse(train.b, qr_train),
+            rmse_test=rmse(test.b, qr_test),
+            runtime_seconds=qr.runtime_seconds,
+        ),
     ]
     print_comparison(rows)
 
     normal_outliers = rank_residual_outliers(train.b - train.A @ normal.x, train.dates)
+    qr_outliers = rank_residual_outliers(train.b - train.A @ qr.x, train.dates)
     outlier_text = "\n".join(
         (
             _format_outliers("Largest |train residual|, normal equations", normal_outliers),
+            _format_outliers("Largest |train residual|, Givens QR", qr_outliers),
             "",
         )
     )

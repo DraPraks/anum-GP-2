@@ -120,4 +120,34 @@ Forward substitution solves $Ly = Pb$ top to bottom ($L$ has 1s on the diagonal)
 This path is cheap on a $6\times 6$ matrix. It is also the less stable path: $\kappa_2(G) \approx \kappa_2(A)^2$.
 
 Method 2 - Givens QR
-TODO
+
+A Givens rotation is a $2\times 2$ plane rotation. On rows $i$ and $j$ it mixes only those two rows and leaves every other row alone. Choose $c$ and $s$ from the two entries in the column being cleared:
+
+$$r = \sqrt{a_{ik}^2 + a_{jk}^2},\qquad c = a_{ik}/r,\qquad s = a_{jk}/r.$$
+
+The same mix applied to both rows sends $(a_{ik}, a_{jk})$ to $(r, 0)$. If both entries are already zero, the rotation is the identity ($c=1$, $s=0$).
+
+For column $k = 0, 1, \ldots, 5$, rotate row $k$ with each later row $j = k+1, \ldots, m-1$. After the column is finished, every entry below the diagonal in that column is zero. The top $6\times 6$ block is the upper-triangular factor $R$. The same rotations are applied to $\vec{b}$ as they are applied to $A$, which builds $\vec{y} = Q^\top\vec{b}$ without storing $Q$. The least-squares coefficients are the backsolve
+
+$$R\vec{x} = \vec{y}_{0:6}.$$
+
+The residual reported in the table is $\|A\vec{x}-\vec{b}\|_2$ on the original $A$ and $\vec{b}$, not on the triangular system.
+
+The first-column check builds only the rotations for $k=0$ and stores $A$ after each one. When that sweep finishes, $A_{1:,0}$ is numerically zero.
+
+```
+GIVENS_LEAST_SQUARES(A, b) // A is m×6
+    for k = 0 .. 5
+        for j = k+1 .. m-1
+            (c, s) <- COSINE_SINE(A[k, k], A[j, k])
+            rotate rows k and j of A from column k onward
+            rotate entries k and j of b
+            store (k, j, k, c, s)
+    R <- upper triangle of A[0:6, 0:6]
+    x <- BACK_SUBSTITUTE(R, b[0:6])
+    return x
+```
+
+Each rotation updates $6-k$ remaining entries of $A$ and one entry of $\vec{b}$, counted as 6 flops per updated entry. That is more arithmetic than forming $A^\top A$ and factoring a $6\times 6$. It does not square the condition number: the solve sees $R$, whose 2-norm condition number matches $\kappa_2(A)$, rather than $\kappa_2(A^\top A)\approx\kappa_2(A)^2$.
+
+The fast path keeps the rotators (two floats each), the $6\times 6$ factor $R$, and the updated $\vec{b}$. Storing $Q$ explicitly would instead keep a thin $m\times 6$ matrix. The comparison table uses that thin figure and leaves $\kappa_2(A^\top A)$ blank for this method, because the QR solve never forms $A^\top A$.
