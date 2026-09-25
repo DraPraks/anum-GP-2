@@ -1,7 +1,12 @@
 """Least squares via the normal equations G x = c."""
 
+import time
 from dataclasses import dataclass
 
+import numpy as np
+
+from src.lu import factor_lu, solve_lu
+from src.metrics import condition_number_2
 from src.types import Matrix, Vector
 
 
@@ -32,11 +37,45 @@ class NormalEquationResult:
     runtime_seconds: float
 
 
-def solve_normal_equations(A: Matrix, b: Vector) -> NormalEquationResult:
-    """Form G = A^T A and c = A^T b, then solve G x = c with the dense LU solver.
+def _normal_equation_flops(m: int, n: int) -> int:
+    """Leading-term flops for the symmetric Gram product, c, and the dense LU solve.
 
-    Raises:
-        NotImplementedError: placeholder.
+    A multiply and an add each count as one flop. The Gram product uses the
+    upper triangle, including the diagonal. Dense LU is the classical
+    2 n^3 / 3 elimination count plus two triangular substitutions.
     """
-    del A, b
-    raise NotImplementedError("solve_normal_equations")
+    gram = (n * (n + 1) // 2) * (2 * m - 1)
+    rhs = n * (2 * m - 1)
+    elimination = (2 * n * n * n) // 3
+    substitution = 2 * n * n
+    return gram + rhs + elimination + substitution
+
+
+def solve_normal_equations(A: Matrix, b: Vector) -> NormalEquationResult:
+    """Form G = A^T A and c = A^T b, then solve G x = c with the dense LU solver."""
+    design = np.asarray(A, dtype=float)
+    target = np.asarray(b, dtype=float)
+    m, n = design.shape
+
+    started = time.perf_counter()
+    gram = design.T @ design
+    rhs = design.T @ target
+    factors = factor_lu(gram)
+    x = solve_lu(factors, rhs)
+    runtime_seconds = time.perf_counter() - started
+
+    residual = design @ x - target
+    memory_bytes = (
+        gram.nbytes + rhs.nbytes + factors.L.nbytes + factors.U.nbytes + factors.P.nbytes + factors.pivots.nbytes
+    )
+    return NormalEquationResult(
+        x=x,
+        G=gram,
+        c=rhs,
+        residual_norm=float(np.sqrt(residual @ residual)),
+        kappa_A=condition_number_2(design),
+        kappa_G=condition_number_2(gram),
+        flops=_normal_equation_flops(m, n),
+        memory_bytes=memory_bytes,
+        runtime_seconds=runtime_seconds,
+    )

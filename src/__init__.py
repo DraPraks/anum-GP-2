@@ -1,7 +1,4 @@
-"""SETAR least-squares skeleton (even group: Givens QR).
-
-Public surface is abstractions only. Numeric algorithms are not implemented.
-"""
+"""SETAR least squares. Normal equations are implemented; Givens QR is a stub."""
 
 from src.design import DesignSystem, build_design_system
 from src.givens import GivensQrResult, givens_least_squares, verify_first_column_rotations

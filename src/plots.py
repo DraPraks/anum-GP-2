@@ -3,6 +3,9 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 from src.types import Vector
 
 
@@ -30,9 +33,21 @@ def plot_returns_overlay(
 
     When ``split_index`` is set, ``actual`` and ``fitted`` are the train series
     concatenated with the test series, and a vertical line marks the split.
-
-    Raises:
-        NotImplementedError: placeholder; nothing is written.
     """
-    del path, actual, fitted, split_index
-    raise NotImplementedError("plot_returns_overlay")
+    destination = Path(path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    observed = np.asarray(actual, dtype=float)
+    predicted = np.asarray(fitted, dtype=float)
+    figure, axes = plt.subplots(figsize=(10, 4))
+    steps = np.arange(len(observed))
+    axes.plot(steps, observed, label="R_t")
+    axes.plot(steps, predicted, label="fitted R_t")
+    if split_index is not None:
+        axes.axvline(split_index, color="black", linestyle="--", label="train/test split")
+    axes.set_xlabel("design row")
+    axes.set_ylabel("return")
+    axes.legend()
+    figure.tight_layout()
+    figure.savefig(destination, dpi=120)
+    plt.close(figure)
+    return OverlayFigure(destination, split_index)

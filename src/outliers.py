@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+import numpy as np
+
 from src.types import Vector
 
 
@@ -31,9 +33,13 @@ def rank_residual_outliers(
 
     ``residual`` is b - A x on the training design. This is evidence only;
     it does not drop rows or refit.
-
-    Raises:
-        NotImplementedError: placeholder.
     """
-    del residual, dates, keep
-    raise NotImplementedError("rank_residual_outliers")
+    values = np.asarray(residual, dtype=float)
+    order = np.argsort(-np.abs(values))[:keep]
+    ranked: list[ResidualOutlier] = []
+    for index in order:
+        row = int(index)
+        label = None if dates is None else str(dates[row])
+        signed = float(values[row])
+        ranked.append(ResidualOutlier(row, label, signed, abs(signed)))
+    return tuple(ranked)

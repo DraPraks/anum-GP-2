@@ -1,4 +1,7 @@
-"""Thin QR least squares by Givens rotations. No library QR."""
+"""Thin QR least squares by Givens rotations. No library QR.
+
+TODO: implement the Givens sweep, the first-column check, and the backsolve.
+"""
 
 from dataclasses import dataclass
 
@@ -79,7 +82,7 @@ def verify_first_column_rotations(A: Matrix) -> FirstColumnSweep:
     The eliminated entries of that column must be numerically zero.
 
     Raises:
-        NotImplementedError: placeholder.
+        NotImplementedError: TODO.
     """
     del A
     raise NotImplementedError("verify_first_column_rotations")
@@ -92,7 +95,7 @@ def givens_least_squares(A: Matrix, b: Vector) -> GivensQrResult:
     on the original A and b, not on the triangularized system.
 
     Raises:
-        NotImplementedError: placeholder.
+        NotImplementedError: TODO.
     """
     del A, b
     raise NotImplementedError("givens_least_squares")

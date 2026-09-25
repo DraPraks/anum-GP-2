@@ -52,14 +52,15 @@ def factor_lu(matrix: Matrix) -> LuFactorization:
     P = np.eye(n)
     pivots = np.empty(n, dtype=int)
 
-        for k in range(n):
-            pivot_row = k
-            for i in range(k, n):
-                if abs(U[i,k]) > abs(U[pivot_row,k]):
-                    pivot_row = i
+    for k in range(n):
+        pivot_row = k
+        for i in range(k, n):
+            if abs(U[i, k]) > abs(U[pivot_row, k]):
+                pivot_row = i
 
-            if abs(U[pivot_row,k]) < 1e-10:
-                raise ValueError("Matrix is singular")
+        pivots[k] = pivot_row
+        if abs(U[pivot_row, k]) < 1e-10:
+            raise ValueError("Matrix is singular")
 
         if pivot_row != k:
             U[[k, pivot_row]] = U[[pivot_row, k]]
