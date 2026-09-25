@@ -10,6 +10,9 @@ def simple_returns(close: Vector) -> Vector:
     The result has length n - 1 and aligns with dates[1:].
 
     Raises:
-        NotImplementedError: placeholder; no formula is evaluated here.
+        ValueError: if close is too short.
     """
-    raise NotImplementedError("simple_returns")
+    if len(close) < 2:
+        raise ValueError("close must have at least 2 elements")
+
+    return (close[1:] - close[:-1]) / close[:-1]
